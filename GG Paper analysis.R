@@ -17,6 +17,7 @@ rs.sample.days <- as.Date(as.character(gg1$rs_sample_Date), format="%d/%m/%Y")
 
 diff.days.sample <- difftime(gg.sample.days, rs.sample.days, units = "days")
 gg1$diff.days.sample <- as.numeric(diff.days.sample)
+glimpse(gg1)
 
 #visualize all variables in the dataset
 library(reshape2)
@@ -33,8 +34,6 @@ library(GGally)
 gg1.data <- data.frame(gg1$Mean.m.2, gg1[,16:25]) 
 x11()
 ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities")
-
-
 
 #p_title <- 'Vegetation Indeces from Planet Lab' 
 
