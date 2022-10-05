@@ -16,9 +16,9 @@ library(GGally)
 # Create data 
 gg1.data <- data.frame(gg1$Mean.m.2, gg1[,16:25]) 
 x11()
-ggpairs(gg1.data, title="correlogram")
+ggpairs(gg1.data, title="Correlogram between Vegetation Indexes from Planet Lab vs. grass grub densities")
 
-#p_title <- 'Vegetation Indeces from Planet Lab' 
+#p_title <- 'Vegetation Indexes from Planet Lab' 
 
 #p1 <- ggplot() +
 #      theme_bw() +
