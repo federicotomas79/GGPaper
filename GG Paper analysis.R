@@ -22,6 +22,15 @@ unique(diff.days.sample)
 gg1$diff.days.sample <- as.numeric(diff.days.sample)
 glimpse(gg1)
 
+#Visualize grass grub densities by months
+ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
+       geom_histogram(binwidth = 100, center = 0) +
+       theme_bw() +
+       scale_x_date(date_labels=("%b-%Y"), 
+                    breaks = unique(gg.sample.days)+30) +
+       ylim(c(0, 300)) +
+       labs(title = "Grass grub per year", y = "Mean density", x = "Date")
+
 #visualize all variables in the dataset
 library(reshape2)
 
