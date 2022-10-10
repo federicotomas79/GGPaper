@@ -55,7 +55,7 @@ library(GGally)
 
 gg1.data <- data.frame(gg1$Mean.m.2, gg1[,16:25]) 
 x11()
-ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities")
+ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities", upper = list(continuous = wrap("cor", size = 3)))
 
 #p_title <- 'Vegetation Indeces from Planet Lab' 
 
