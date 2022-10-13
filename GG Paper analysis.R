@@ -25,10 +25,10 @@ glimpse(gg1)
 #Visualize grass grub densities by months
 #range(gg1$Mean.m.2) #0-688
 ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
-       geom_histogram(binwidth = 100, center = 0) +
+       geom_histogram(binwidth = 100, boundary = 5) +
        theme_bw() +
-       scale_x_date(date_labels=("%b-%Y"), 
-                    breaks = unique(gg.sample.days)+30) +
+       scale_x_date(date_labels=("%d-%b-%Y"), 
+                    breaks = unique(gg.sample.days)) +
        ylim(c(0, 300)) +
        labs(title = "Grass grub per year", y = "Mean density", x = "Date")
 
