@@ -24,7 +24,6 @@ glimpse(gg1)
 
 #Visualize grass grub densities by months
 #range(gg1$Mean.m.2) #0-688
-
 ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
        geom_histogram(binwidth = 100, center = 0) +
        theme_bw() +
@@ -33,6 +32,18 @@ ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
        ylim(c(0, 300)) +
        labs(title = "Grass grub per year", y = "Mean density", x = "Date")
 
+#Visualize grass grub densities by cultivar per year
+
+x11()
+ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
+  geom_boxplot() + 
+  theme_bw() +
+  labs(fill = "Ryegrass cultivar", y= expression("Larvae per"~ m^2)) +
+  geom_jitter(width=0.1, alpha=0.1) +
+  labs(title = "Grass grub by cultivar per year", x = "Year") +
+  facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
+  
+  
 #Create data table for exploration
 library(DT)
 gg1.datatable <- data.frame(gg1[,c(8:9,12:13,29)])
@@ -53,7 +64,7 @@ ggplot(data = melt.gg1, aes(x = value, group=year, colour=year)) +
 #Create correlations of all of the numerical variables
 library(GGally)
 
-gg1.data <- data.frame(gg1$Mean.m.2, gg1[,16:25]) 
+gg1.data <- data.frame(gg1[,c(9,16:25)]) 
 x11()
 ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities", upper = list(continuous = wrap("cor", size = 3)))
 
