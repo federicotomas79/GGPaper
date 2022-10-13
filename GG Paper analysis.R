@@ -42,7 +42,34 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
   geom_jitter(width=0.1, alpha=0.1) +
   labs(title = "Grass grub by cultivar per year", x = "Year") +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
-  
+
+#Visualize grass grub infestation levels
+
+gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
+gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
+
+ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
+       geom_violin(trim=FALSE) +
+       scale_x_discrete(limits = rev) +
+       scale_color_brewer(palette="Set1") +
+       theme_bw() +
+       #stat_summary(fun=mean, geom="point", size=2) +
+       guides(colour = "none") +    
+       geom_jitter(width=0.1, alpha=0.1) +
+       labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+       geom_boxplot(width=0.1)
+
+ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
+       geom_violin(trim=FALSE) +
+       scale_x_discrete(limits = rev) +
+       scale_color_brewer(palette="Set1") +
+       theme_bw() +
+       #stat_summary(fun=mean, geom="point", size=2) +
+       guides(colour = "none") +    
+       geom_jitter(width=0.1, alpha=0.1) +
+       labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+       geom_boxplot(width=0.1) +
+       facet_wrap(~year)
   
 #Create data table for exploration
 library(DT)
