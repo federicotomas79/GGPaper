@@ -44,13 +44,15 @@ glimpse(gg1)
 ## Grass grub densities visualizations
 
 ```{r ggpaper3, echo=FALSE, message=FALSE, warning=FALSE}
-ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
-       geom_histogram(binwidth = 100, boundary = 5) +
+#Visualize grass grub densities by months
+#range(gg1$Mean.m.2) #0-688 
+ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
+       geom_point(stat = 'identity', color="grey") +
        theme_bw() +
        scale_x_date(date_labels=("%d-%b-%Y"), 
                     breaks = unique(gg.sample.days)) +
-       ylim(c(0, 300)) +
-       labs(title = "Grass grub per year", y = "Mean density", x = "Date")
+       labs(title = "Grass grub per year", y = "Value", x = "Date") +
+       stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
   geom_boxplot() + 
@@ -94,7 +96,7 @@ ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label)
 
 ```{r ggpaper4, echo=FALSE, message=FALSE, warning=FALSE}
 library(DT)
-gg1.datatable <- data.frame(gg1[,c(8:9,12:13,29)])
+gg1.datatable <- data.frame(gg1[,c(13,16:25)])
 datatable(gg1.datatable, selection="multiple")
 ```
 

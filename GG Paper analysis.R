@@ -23,14 +23,14 @@ gg1$diff.days.sample <- as.numeric(diff.days.sample)
 glimpse(gg1)
 
 #Visualize grass grub densities by months
-#range(gg1$Mean.m.2) #0-688
-ggplot(gg1, aes(x = gg.sample.days, fill = Mean.m.2)) +
-       geom_histogram(binwidth = 100, boundary = 5) +
+#range(gg1$Mean.m.2) #0-688 
+ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
+       geom_point(stat = 'identity', color="grey") +
        theme_bw() +
        scale_x_date(date_labels=("%d-%b-%Y"), 
                     breaks = unique(gg.sample.days)) +
-       ylim(c(0, 300)) +
-       labs(title = "Grass grub per year", y = "Mean density", x = "Date")
+       labs(title = "Grass grub per year", y = "Value", x = "Date") +
+       stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 #Visualize grass grub densities by cultivar per year
 
