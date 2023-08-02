@@ -11,6 +11,15 @@ setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/R analysis/GG Paper")
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07.csv')      
 glimpse(gg1)
 
+#Graphs for difference days between rs and gg sample
+x11()
+ggplot(gg1, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
+  geom_point(stat = 'identity', color="grey", show.legend = FALSE) +
+  theme_bw() +
+  labs(title = "Difference in days between gg sampling and rs data", y = "Difference in days (RS images)", x = "Sampling year")+
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="point", color="red", show.legend = FALSE) +
+  scale_y_continuous(breaks = (c(0, -50, -100, -150, -200)), labels = c("Day GG sampled", -50, -100, -150, -200))
+
 #Calculate and add difference in sampling days
 gg.sample.days <- as.Date(as.character(gg1$gg_sample_Date), format="%d/%m/%Y")
 unique(gg.sample.days)
