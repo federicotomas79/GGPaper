@@ -158,6 +158,20 @@ library("factoextra")
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$Ryegrass.cultivar)
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
 
+#Using Partial Least Squares (PLS)
+library("guidedPLS")
+out1 <- PLSSVD(X=as.matrix(gg1[,c(16:25)]), Y=as.matrix(gg1$Mean.m.2), deflation = TRUE)
+plot(out1$scoreX, col=gg1$year, main="PLS-DA", pch=16)
+
+#from here.....
+
+# legend("topleft",                    # Add legend to plot
+#        legend = c(unique(gg1$year)),
+#        col = 1:4,
+#        pch = 16,
+#        horiz = TRUE)
+
+
 # fviz_pca_biplot(res.pca,
 #                 labelsize=3,
 #                 addEllipses = T,
