@@ -156,7 +156,6 @@ ggplot(gg1, aes(gg.pca$x[,2], gg.pca$x[,1], label = Ryegrass.cultivar)) +
 library("factoextra")
 
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$Ryegrass.cultivar)
-
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
 
 # fviz_pca_biplot(res.pca,
