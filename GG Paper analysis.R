@@ -31,8 +31,6 @@ ggplot(gg1, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="point", color="red", show.legend = FALSE) +
   scale_y_continuous(breaks = (c(0, -50, -100, -150, -200)), labels = c("Day GG sampled", -50, -100, -150, -200))
 
-
-
 #Visualize grass grub densities by months
 #range(gg1$Mean.m.2) #0-688 
 ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
@@ -40,8 +38,17 @@ ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
        theme_bw() +
        scale_x_date(date_labels=("%d-%b-%Y"), 
                     breaks = unique(gg.sample.days)) +
-       labs(title = "Grass grub per year", y = "Value", x = "Date") +
+       labs(title = "Grass grub per year", y = "Log (Value)", x = "Date") +
        stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
+
+#With log transformation 
+ggplot(gg1, aes(x = gg.sample.days, y = log(Mean.m.2))) +
+  geom_point(stat = 'identity', color="grey") +
+  theme_bw() +
+  scale_x_date(date_labels=("%d-%b-%Y"), 
+               breaks = unique(gg.sample.days)) +
+  labs(title = "Grass grub per year", y = "Log (Value)", x = "Date") +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 #Visualize grass grub densities by cultivar per year
 
@@ -100,11 +107,72 @@ ggplot(data = melt.gg1, aes(x = value, group=year, colour=year)) +
        facet_wrap(~variable, scales = "free") 
 
 #Create correlations of all of the numerical variables
+#First way
 library(GGally)
 
 gg1.data <- data.frame(gg1[,c(9,16:25)]) 
 x11()
 ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities", upper = list(continuous = wrap("cor", size = 3)))
+
+#Second way (https://little-book-of-r-for-multivariate-analysis.readthedocs.io/en/latest/src/multivariateanalysis.html)
+mosthighlycorrelated <- function(mydataframe,numtoreport)
+{
+  # find the correlations
+  cormatrix <- cor(mydataframe)
+  # set the correlations on the diagonal or lower triangle to zero,
+  # so they will not be reported as the highest ones:
+  diag(cormatrix) <- 0
+  cormatrix[lower.tri(cormatrix)] <- 0
+  # flatten the matrix into a dataframe for easy sorting
+  fm <- as.data.frame(as.table(cormatrix))
+  # assign human-friendly nameshttp://127.0.0.1:45347/graphics/plot_zoom_png?width=1200&height=900
+  names(fm) <- c("First.Variable", "Second.Variable","Correlation")
+  # sort and print the top n correlations
+  head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
+}
+
+mosthighlycorrelated(scale(data.frame(gg1[,c(16:25)])), 10)
+
+#Principal Component Analysis
+std.gg <-data.frame(gg1[,c(16:25)])
+gg.pca <- prcomp(std.gg, scale. = TRUE) 
+summary(gg.pca)
+screeplot(gg.pca, type="lines")
+
+#First PCA plot idea (a bit confusing)
+plot(gg.pca$x[,1],gg.pca$x[,2])
+text(gg.pca$x[,1],gg.pca$x[,2], gg1$Ryegrass.cultivar, cex=0.7, pos=4, col="red")
+
+#Second plotting PCA method
+library(ggrepel)
+ggplot(gg1, aes(gg.pca$x[,2], gg.pca$x[,1], label = Ryegrass.cultivar)) +
+  geom_text_repel() +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 16)
+
+#Using a Principal Component Analysis data visualization
+#library("devtools")
+#install_github("kassambara/factoextra")
+library("factoextra")
+
+fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$Ryegrass.cultivar)
+
+fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
+
+# fviz_pca_biplot(res.pca,
+#                 labelsize=3,
+#                 addEllipses = T,
+#                 repel=F,
+#                 # Individuals
+#                 geom.ind = "point",
+#                 geom.var = c("point", "text"),
+#                 fill.ind = data$Species,
+#                 pointshape = 21 ,
+#                 pointsize = 2,
+#                 alpha.ind=0.4,
+#                 # Variables
+#                 alpha.var =1, 
+#                 legend.title = list(fill = "Species"))+
 
 #p_title <- 'Vegetation Indeces from Planet Lab' 
 
