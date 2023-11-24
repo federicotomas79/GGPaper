@@ -8,7 +8,7 @@ library(tidyverse)
 
 setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/R analysis/GG Paper")
 
-gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07.csv')      
+gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07_plus_2012_FT.csv')      
 glimpse(gg1)
 
 #Calculate and add difference in sampling days
@@ -160,8 +160,16 @@ fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
 
 #Using Partial Least Squares (PLS)
 library("guidedPLS")
-out1 <- PLSSVD(X=as.matrix(gg1[,c(16:25)]), Y=as.matrix(gg1$Mean.m.2), deflation = TRUE)
-plot(out1$scoreX, col=gg1$year, main="PLS-DA", pch=16)
+plsda_out1 <- PLSSVD(X=as.matrix(gg1[,c(16:25)]), Y=as.matrix(gg1$year), deflation = TRUE)
+plot(plsda_out1$scoreX, col=factor(gg1$year), main="PLS-DA Vegetation Indeces", pch=16)
+legend(x = "top", legend = sort(unique(gg1$year)), fill = 1:sort(unique(gg1$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#1library(devtools)
+#install_github("mixOmicsTeam/mixOmics") #https://mixomics-users.discourse.group/t/customize-plotindiv-plot-using-plsda-with-mixomics/932
+library(mixOmics)
+plsda_out2 <- plsda(X=gg1[,c(16:25)], Y=gg1$year, max.iter = 10000, ncomp=2)
+plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLS-DA Vegetation Indeces")
+
 
 #from here.....
 
