@@ -11,6 +11,10 @@ setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/R analysis/GG Paper")
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07_plus_2012_FT.csv')      
 glimpse(gg1)
 
+#MSAVI = modified soil-adjusted vegetation index (index less sensitive to chlorophyll effects, more responsive to green LAI variations and more resistant to soil and atmosphere effects)
+#NGRDI = Normalized Green–Red Difference Index indicates the colour of a pixel (i.e., greenish or reddish)
+#ReNDVI = Red-edge Normalized Vegetation Index approaches 1 when the crops are dense and the RENDVI approaches 0 when the crops are thin
+
 #Calculate and add difference in sampling days
 gg.sample.days <- as.Date(as.character(gg1$gg_sample_Date), format="%d/%m/%Y")
 unique(gg.sample.days)
@@ -133,9 +137,9 @@ mosthighlycorrelated <- function(mydataframe,numtoreport)
 
 mosthighlycorrelated(scale(data.frame(gg1[,c(16:25)])), 10)
 
-#Principal Component Analysis
+#Principal Component Analysis (check Spatial data analysis in ecology and agriculture using R)
 std.gg <-data.frame(gg1[,c(16:25)])
-gg.pca <- prcomp(std.gg, scale. = TRUE) 
+gg.pca <- prcomp(~ . , data=std.gg, scale. = TRUE) 
 summary(gg.pca)
 screeplot(gg.pca, type="lines")
 
@@ -170,6 +174,13 @@ library(mixOmics)
 plsda_out2 <- plsda(X=gg1[,c(16:25)], Y=gg1$year, max.iter = 10000, ncomp=2)
 plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLS-DA Vegetation Indeces")
 
+#CART approach analysis
+library(rpart)
+
+gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1)
+x11()
+plot(gg.rp1)
+text(gg.rp1)
 
 #from here.....
 
