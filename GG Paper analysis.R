@@ -181,6 +181,7 @@ gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red 
 x11()
 plot(gg.rp1)
 text(gg.rp1)
+summary(gg.rp1)
 
 #from here.....
 
