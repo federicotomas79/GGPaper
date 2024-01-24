@@ -6,7 +6,7 @@
 
 library(tidyverse)
 
-setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/R analysis/GG Paper")
+setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07_plus_2012_FT.csv')      
 glimpse(gg1)
@@ -27,7 +27,7 @@ gg1$diff.days.sample <- as.numeric(diff.days.sample)
 glimpse(gg1)
 
 #Graphs for difference days between rs and gg sample
-x11()
+#x11()
 ggplot(gg1, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
   geom_point(stat = 'identity', color="grey", show.legend = FALSE) +
   theme_bw() +
@@ -55,8 +55,7 @@ ggplot(gg1, aes(x = gg.sample.days, y = log(Mean.m.2))) +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 #Visualize grass grub densities by cultivar per year
-
-x11()
+#x11()
 ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
   geom_boxplot() + 
   theme_bw() +
@@ -66,7 +65,6 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
 
 #Visualize grass grub infestation levels
-
 gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
 gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
 
@@ -115,7 +113,7 @@ ggplot(data = melt.gg1, aes(x = value, group=year, colour=year)) +
 library(GGally)
 
 gg1.data <- data.frame(gg1[,c(9,16:25)]) 
-x11()
+#x11()
 ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities", upper = list(continuous = wrap("cor", size = 3)))
 
 #Second way (https://little-book-of-r-for-multivariate-analysis.readthedocs.io/en/latest/src/multivariateanalysis.html)
@@ -178,7 +176,7 @@ plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PL
 library(rpart)
 
 gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1)
-x11()
+#x11()
 plot(gg.rp1)
 text(gg.rp1)
 summary(gg.rp1)
