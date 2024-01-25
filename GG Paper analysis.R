@@ -68,6 +68,9 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
 gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
 gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
 
+table(gg1$gg_risk_label) #High #Low 
+                         #327  #543 
+
 ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
   geom_violin(trim=FALSE) +
   scale_x_discrete(limits = rev) +
@@ -90,6 +93,13 @@ ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label)
   labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
   geom_boxplot(width=0.1) +
   facet_wrap(~year)
+
+#Group data by days since grazing
+table(gg1$days_snc_lst_graze)
+groups4 = cut(gg1$days_snc_lst_graze, breaks = c(0, 4, 17, 30, 194), labels = FALSE, include.lowest = TRUE)
+print(groups4)
+table(groups4)
+gg1$dslg_groups <- groups4
 
 #Create data table for exploration
 library(DT)
@@ -133,15 +143,32 @@ mosthighlycorrelated <- function(mydataframe,numtoreport)
   head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
 }
 
-mosthighlycorrelated(scale(data.frame(gg1[,c(16:25)])), 10)
+mosthighlycorrelated(scale(data.frame(gg1[,c(16:25)])), 20)
 
 #Principal Component Analysis (check Spatial data analysis in ecology and agriculture using R)
 std.gg <-data.frame(gg1[,c(16:25)])
-gg.pca <- prcomp(~ . , data=std.gg, scale. = TRUE) 
+gg.pca <- stats::princomp(~ . , data=std.gg, cor=TRUE, scores=TRUE) 
 summary(gg.pca)
 screeplot(gg.pca, type="lines")
 
+#3D Visualization
+library(rgl)
+
+get_colors <- function(groups, group.col = palette()){
+  groups <- as.factor(groups)
+  ngrps <- length(levels(groups))
+  if(ngrps > length(group.col)) 
+    group.col <- rep(group.col, ngrps)
+  color <- group.col[as.numeric(groups)]
+  names(color) <- as.vector(groups)
+  return(color)
+}
+
+plot3d(gg.pca$scores[,1:3], col=get_colors(gg1$dslg_groups), type="s", radius = 0.15, box=FALSE)
+dev.off()
+
 #First PCA plot idea (a bit confusing)
+gg.pca <- prcomp(~ . , data=std.gg, scale. = TRUE) 
 plot(gg.pca$x[,1],gg.pca$x[,2])
 text(gg.pca$x[,1],gg.pca$x[,2], gg1$Ryegrass.cultivar, cex=0.7, pos=4, col="red")
 
@@ -160,23 +187,58 @@ library("factoextra")
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$Ryegrass.cultivar)
 fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
 
+gg1$cultdate <- interaction(gg1$Ryegrass.cultivar, gg1$gg_sample_Date)
+fviz_pca_ind(gg.pca, geom="point", habillage=gg1$cultdate)
+
+#look at the days since grazing in a PCA
+
 #Using Partial Least Squares (PLS)
 library("guidedPLS")
 plsda_out1 <- PLSSVD(X=as.matrix(gg1[,c(16:25)]), Y=as.matrix(gg1$year), deflation = TRUE)
-plot(plsda_out1$scoreX, col=factor(gg1$year), main="PLS-DA Vegetation Indeces", pch=16)
-legend(x = "top", legend = sort(unique(gg1$year)), fill = 1:sort(unique(gg1$year)), horiz=TRUE, bty = "n", cex = 0.9)
+plot(plsda_out1$scoreX, col=sort(factor(gg1$year)), main="PLSDA Vegetation Indeces", pch=16)
+legend(x = "top", legend = sort(unique(gg1$year)), 
+       fill = 1:sort(unique(gg1$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#PLS with low levels of infestation
+gg1low <- gg1 %>% filter(gg_risk_label=="Low")
+plsda_out2 <- PLSSVD(X=as.matrix(gg1low[,c(16:25)]), Y=as.matrix(gg1low$year), deflation = TRUE)
+plot(plsda_out2$scoreX, col=sort(factor(gg1low$year)), main="PLSDA VIs - low level", pch=16)
+legend(x = "top", legend = sort(unique(gg1low$year)), 
+       fill = 1:sort(unique(gg1low$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#PLS with high levels of infestation
+gg1high <- gg1 %>% filter(gg_risk_label=="High")
+plsda_out3 <- PLSSVD(X=as.matrix(gg1high[,c(16:25)]), Y=as.matrix(gg1high$year), deflation = TRUE)
+plot(plsda_out3$scoreX, col=sort(factor(gg1high$year)), main="PLSDA VIs - high level", pch=16)
+legend(x = "top", legend = sort(unique(gg1high$year)), 
+       fill = 1:sort(unique(gg1high$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#collapse groups of days since last grazing
 
 #1library(devtools)
 #install_github("mixOmicsTeam/mixOmics") #https://mixomics-users.discourse.group/t/customize-plotindiv-plot-using-plsda-with-mixomics/932
 library(mixOmics)
-plsda_out2 <- plsda(X=gg1[,c(16:25)], Y=gg1$year, max.iter = 10000, ncomp=2)
-plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLS-DA Vegetation Indeces")
+plsda_out2 <- plsda(X=gg1[,c(16:25)], Y=gg1$dslg_groups, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces")
+
+#PLSDA with two groups of infestation levels
+table(gg1$gg_risk_label) 
+
+gg1low <- gg1 %>% filter(gg_risk_label=="Low")
+gg1high <- gg1 %>% filter(gg_risk_label=="High")
+
+plsda_out3 <- plsda(X=gg1low[,c(16:25)], Y=gg1low$dslg_groups, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out3, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces - Low infestation")
+
+plsda_out4 <- plsda(X=gg1high[,c(16:25)], Y=gg1high$dslg_groups, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out4, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces - High infestation")
+
 
 #CART approach analysis
 library(rpart)
 
 gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1)
-#x11()
+x11()
 plot(gg.rp1)
 text(gg.rp1)
 summary(gg.rp1)
