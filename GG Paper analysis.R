@@ -2,7 +2,8 @@
 # Federico Tomasetto 
 # 2022/10/4
 
-#rm(list = ls())
+rm(list = ls(all.names = TRUE)) # will clear all objects, including hidden objects
+gc()
 
 library(tidyverse)
 
