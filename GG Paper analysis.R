@@ -219,8 +219,28 @@ legend(x = "top", legend = sort(unique(gg1high$year)),
 #1library(devtools)
 #install_github("mixOmicsTeam/mixOmics") #https://mixomics-users.discourse.group/t/customize-plotindiv-plot-using-plsda-with-mixomics/932
 library(mixOmics)
-plsda_out2 <- plsda(X=gg1[,c(16:25)], Y=gg1$dslg_groups, max.iter = 10000, ncomp=3)
+library(pls)
+vi_data <- gg1[,c(16:25)]
+class_label <- gg1[,c(30)]
+
+plsda_out2 <- plsda(vi_data, class_label, max.iter = 10000, ncomp=3)
 plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces")
+(vip_scores <- vip(plsda_out2))
+important_vis <- vi_data[vip_scores>1,]
+
+#Visualisation of this importance #1
+plotLoadings(plsda_out2, contrib = 'max', method = 'median', comp = 1)
+
+#Visualisation of this importance #2
+library(RColorBrewer)
+coul <- brewer.pal(10, "Paired") 
+
+barplot(vip_scores,
+        beside = TRUE, col = coul,
+        ylim = c(0, 2.7), 
+        legend = TRUE, 
+        args.legend = list(bty = "n", x = "top", ncol = 3),
+        main = "Variable Importance in the PLSDA", font.main = 4)
 
 #PLSDA with two groups of infestation levels
 table(gg1$gg_risk_label) 
@@ -243,6 +263,8 @@ x11()
 plot(gg.rp1)
 text(gg.rp1)
 summary(gg.rp1)
+
+
 
 #from here.....
 
