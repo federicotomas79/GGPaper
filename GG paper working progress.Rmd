@@ -7,6 +7,8 @@ output:
         toc: true
         toc_float: true
         number_sections: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -19,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 
-setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/R analysis/GG Paper")
+setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07_plus_2012_FT.csv')      
 #glimpse(gg1)
@@ -47,12 +49,21 @@ glimpse(gg1)
 #Visualize grass grub densities by months
 #range(gg1$Mean.m.2) #0-688 
 ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
-       geom_point(stat = 'identity', color="grey") +
-       theme_bw() +
-       scale_x_date(date_labels=("%d-%b-%Y"), 
-                    breaks = unique(gg.sample.days)) +
-       labs(title = "Grass grub per year", y = "Value", x = "Date") +
-       stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
+  geom_point(stat = 'identity', color="grey") +
+  theme_bw() +
+  scale_x_date(date_labels=("%d-%b-%Y"), 
+               breaks = unique(gg.sample.days)) +
+  labs(title = "Grass grub per year", y = "Value", x = "Date") +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
+
+#With log transformation 
+ggplot(gg1, aes(x = gg.sample.days, y = log(Mean.m.2))) +
+  geom_point(stat = 'identity', color="grey") +
+  theme_bw() +
+  scale_x_date(date_labels=("%d-%b-%Y"), 
+               breaks = unique(gg.sample.days)) +
+  labs(title = "Grass grub per year", y = "Log (Value)", x = "Date") +
+  stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
   geom_boxplot() + 
@@ -68,27 +79,27 @@ gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
 gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
 
 ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
-       geom_violin(trim=FALSE) +
-       scale_x_discrete(limits = rev) +
-       scale_color_brewer(palette="Set1") +
-       theme_bw() +
-       #stat_summary(fun=mean, geom="point", size=2) +
-       guides(colour = "none") +    
-       geom_jitter(width=0.1, alpha=0.1) +
-       labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
-       geom_boxplot(width=0.1)
+  geom_violin(trim=FALSE) +
+  scale_x_discrete(limits = rev) +
+  scale_color_brewer(palette="Set1") +
+  theme_bw() +
+  #stat_summary(fun=mean, geom="point", size=2) +
+  guides(colour = "none") +    
+  geom_jitter(width=0.1, alpha=0.1) +
+  labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+  geom_boxplot(width=0.1)
 
 ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
-       geom_violin(trim=FALSE) +
-       scale_x_discrete(limits = rev) +
-       scale_color_brewer(palette="Set1") +
-       theme_bw() +
-       #stat_summary(fun=mean, geom="point", size=2) +
-       guides(colour = "none") +    
-       geom_jitter(width=0.1, alpha=0.1) +
-       labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
-       geom_boxplot(width=0.1) +
-       facet_wrap(~year)
+  geom_violin(trim=FALSE) +
+  scale_x_discrete(limits = rev) +
+  scale_color_brewer(palette="Set1") +
+  theme_bw() +
+  #stat_summary(fun=mean, geom="point", size=2) +
+  guides(colour = "none") +    
+  geom_jitter(width=0.1, alpha=0.1) +
+  labs(title = "Grass grub by infestation levels per sampling year", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+  geom_boxplot(width=0.1) +
+  facet_wrap(~year)
   
 ```
 
@@ -100,10 +111,9 @@ gg1.datatable <- data.frame(gg1[,c(13,16:25)])
 datatable(gg1.datatable, selection="multiple")
 ```
 
-## Graphs for difference days between rs and gg sample
+## Difference in days between satellite images and and gg field samples
 
 ```{r ggpaper5, echo=FALSE, message=FALSE, warning=FALSE}
-
 
 ggplot(gg1, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
   geom_point(stat = 'identity', color="grey", show.legend = FALSE) +
@@ -136,4 +146,133 @@ gg1.data <- data.frame(gg1$Mean.m.2, gg1[,16:25])
 #x11()
 ggpairs(gg1.data, title="Correlogram - Vegetation Indexes from Planet Lab vs. grass grub densities", upper = list(continuous = wrap("cor", size = 3)))
 
+#Second way (https://little-book-of-r-for-multivariate-analysis.readthedocs.io/en/latest/src/multivariateanalysis.html)
+mosthighlycorrelated <- function(mydataframe,numtoreport)
+{
+  # find the correlations
+  cormatrix <- cor(mydataframe)
+  # set the correlations on the diagonal or lower triangle to zero,
+  # so they will not be reported as the highest ones:
+  diag(cormatrix) <- 0
+  cormatrix[lower.tri(cormatrix)] <- 0
+  # flatten the matrix into a dataframe for easy sorting
+  fm <- as.data.frame(as.table(cormatrix))
+  # assign human-friendly nameshttp://127.0.0.1:45347/graphics/plot_zoom_png?width=1200&height=900
+  names(fm) <- c("First.Variable", "Second.Variable","Correlation")
+  # sort and print the top n correlations
+  head(fm[order(abs(fm$Correlation),decreasing=T),],n=numtoreport)
+}
+
+mosthighlycorrelated(scale(data.frame(gg1[,c(16:25)])), 20)
+
 ```
+
+## Multivariate Analysis - PCA
+
+```{r ggpaper8, echo=FALSE, message=FALSE, warning=FALSE}
+#Principal Component Analysis (check Spatial data analysis in ecology and agriculture using R)
+std.gg <-data.frame(gg1[,c(16:25)])
+gg.pca <- stats::princomp(~ . , data=std.gg, cor=TRUE, scores=TRUE) 
+#summary(gg.pca)
+screeplot(gg.pca, type="lines")
+
+#First PCA plot idea (a bit confusing)
+gg.pca <- prcomp(~ . , data=std.gg, scale. = TRUE) 
+plot(gg.pca$x[,1],gg.pca$x[,2])
+text(gg.pca$x[,1],gg.pca$x[,2], gg1$Ryegrass.cultivar, cex=0.7, pos=4, col="red")
+
+#Second plotting PCA method
+library(ggrepel)
+ggplot(gg1, aes(gg.pca$x[,2], gg.pca$x[,1], label = Ryegrass.cultivar)) +
+  geom_text_repel() +
+  geom_point(color = 'red') +
+  theme_classic(base_size = 16)
+
+library("factoextra")
+
+fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$Ryegrass.cultivar)
+fviz_pca_ind(gg.pca, geom="point",  habillage=gg1$gg_sample_Date)
+
+gg1$cultdate <- interaction(gg1$Ryegrass.cultivar, gg1$gg_sample_Date)
+fviz_pca_ind(gg.pca, geom="point", habillage=gg1$cultdate)
+
+```
+
+## Multivariate Analysis - PLSDA
+
+```{r ggpaper9, echo=FALSE, message=FALSE, warning=FALSE}
+#Using Partial Least Squares (PLS)
+library("guidedPLS")
+plsda_out1 <- PLSSVD(X=as.matrix(gg1[,c(16:25)]), Y=as.matrix(gg1$year), deflation = TRUE)
+plot(plsda_out1$scoreX, col=sort(factor(gg1$year)), main="PLSDA Vegetation Indeces", pch=16)
+legend(x = "top", legend = sort(unique(gg1$year)), 
+       fill = 1:sort(unique(gg1$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#PLS with low levels of infestation
+gg1low <- gg1 %>% filter(gg_risk_label=="Low")
+plsda_out2 <- PLSSVD(X=as.matrix(gg1low[,c(16:25)]), Y=as.matrix(gg1low$year), deflation = TRUE)
+plot(plsda_out2$scoreX, col=sort(factor(gg1low$year)), main="PLSDA VIs - low level", pch=16)
+legend(x = "top", legend = sort(unique(gg1low$year)), 
+       fill = 1:sort(unique(gg1low$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#PLS with high levels of infestation
+gg1high <- gg1 %>% filter(gg_risk_label=="High")
+plsda_out3 <- PLSSVD(X=as.matrix(gg1high[,c(16:25)]), Y=as.matrix(gg1high$year), deflation = TRUE)
+plot(plsda_out3$scoreX, col=sort(factor(gg1high$year)), main="PLSDA VIs - high level", pch=16)
+legend(x = "top", legend = sort(unique(gg1high$year)), 
+       fill = 1:sort(unique(gg1high$year)), horiz=TRUE, bty = "n", cex = 0.9)
+
+#library(devtools)
+#install_github("mixOmicsTeam/mixOmics") #https://mixomics-users.discourse.group/t/customize-plotindiv-plot-using-plsda-with-mixomics/932
+library(mixOmics)
+library(pls)
+
+#Group data by days since grazing
+groups4 = cut(gg1$days_snc_lst_graze, breaks = c(0, 4, 17, 30, 194), labels = FALSE, include.lowest = TRUE)
+gg1$dslg_groups <- groups4
+
+vi_data <- gg1[,c(16:25)]
+class_label <- gg1[,c(31)]
+
+plsda_out2 <- plsda(vi_data, class_label, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces for group grazings")
+vip_scores <- vip(plsda_out2)
+important_vis <- vi_data[vip_scores>1,]
+
+#Visualisation of this importance #1
+#plotLoadings(plsda_out2, contrib = 'max', method = 'median', comp = 1)
+
+#Visualisation of this importance #2
+library(RColorBrewer)
+coul <- brewer.pal(10, "Paired") 
+
+barplot(vip_scores,
+        beside = TRUE, col = coul,
+        ylim = c(0, 2.7), 
+        legend = TRUE, 
+        args.legend = list(bty = "n", x = "top", ncol = 3),
+        main = "Variable Importance in the PLSDA", font.main = 4)
+
+#PLSDA with two groups of infestation levels
+#table(gg1$gg_risk_label) 
+
+#Group data by days since grazing
+#table(gg1$days_snc_lst_graze)
+groups4 = cut(gg1$days_snc_lst_graze, breaks = c(0, 4, 17, 30, 194), labels = FALSE, include.lowest = TRUE)
+#print(groups4)
+#table(groups4)
+gg1$dslg_groups <- groups4
+
+gg1low <- gg1 %>% filter(gg_risk_label=="Low")
+gg1high <- gg1 %>% filter(gg_risk_label=="High")
+
+plsda_out3 <- plsda(X=gg1low[,c(16:25)], Y=gg1low$dslg_groups, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out3, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces - Low infestation")
+
+plsda_out4 <- plsda(X=gg1high[,c(16:25)], Y=gg1high$dslg_groups, max.iter = 10000, ncomp=3)
+plotIndiv(plsda_out4, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces - High infestation")
+
+
+
+```
+

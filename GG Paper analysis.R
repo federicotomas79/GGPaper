@@ -91,7 +91,7 @@ ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label)
   #stat_summary(fun=mean, geom="point", size=2) +
   guides(colour = "none") +    
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+  labs(title = "Grass grub by infestation levels per sampling year", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
   geom_boxplot(width=0.1) +
   facet_wrap(~year)
 
@@ -216,15 +216,15 @@ legend(x = "top", legend = sort(unique(gg1high$year)),
 
 #collapse groups of days since last grazing
 
-#1library(devtools)
+#library(devtools)
 #install_github("mixOmicsTeam/mixOmics") #https://mixomics-users.discourse.group/t/customize-plotindiv-plot-using-plsda-with-mixomics/932
 library(mixOmics)
 library(pls)
 vi_data <- gg1[,c(16:25)]
-class_label <- gg1[,c(30)]
+class_label <- gg1[,c(31)]
 
 plsda_out2 <- plsda(vi_data, class_label, max.iter = 10000, ncomp=3)
-plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces")
+plotIndiv(plsda_out2, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PLSDA Vegetation Indeces for grazing groups")
 (vip_scores <- vip(plsda_out2))
 important_vis <- vi_data[vip_scores>1,]
 
