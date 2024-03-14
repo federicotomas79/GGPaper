@@ -151,6 +151,7 @@ std.gg <-data.frame(gg1[,c(16:25)])
 gg.pca <- stats::princomp(~ . , data=std.gg, cor=TRUE, scores=TRUE) 
 summary(gg.pca)
 screeplot(gg.pca, type="lines")
+get_eigenvalue(gg.pca)
 
 #3D Visualization
 library(rgl)
@@ -172,6 +173,7 @@ dev.off()
 gg.pca <- prcomp(~ . , data=std.gg, scale. = TRUE) 
 plot(gg.pca$x[,1],gg.pca$x[,2])
 text(gg.pca$x[,1],gg.pca$x[,2], gg1$Ryegrass.cultivar, cex=0.7, pos=4, col="red")
+
 
 #Second plotting PCA method
 library(ggrepel)
