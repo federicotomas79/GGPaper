@@ -1,6 +1,6 @@
 ## GG Paper
 # Federico Tomasetto 
-# 2022/10/4
+# 2024/5/17
 
 rm(list = ls(all.names = TRUE)) # will clear all objects, including hidden objects
 gc()
@@ -9,8 +9,10 @@ library(tidyverse)
 
 setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 
-gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/rs_gg_mdl_data_2022_01_07_plus_2012_FT.csv')      
+gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper/rs_gg_mdl_data_2022_01_07_plus_2012_2013_FT.csv')      
 glimpse(gg1)
+
+table(gg1$year)
 
 #MSAVI = modified soil-adjusted vegetation index (index less sensitive to chlorophyll effects, more responsive to green LAI variations and more resistant to soil and atmosphere effects)
 #NGRDI = Normalized Green–Red Difference Index indicates the colour of a pixel (i.e., greenish or reddish)
@@ -110,14 +112,16 @@ datatable(gg1.datatable, selection="multiple")
 #visualize all variables in the dataset
 library(reshape2)
 
-melt.gg1 <- melt(gg1[, c(9,16:25,29)])
+melt.gg1 <- melt(gg1[, c(16:25)])
 melt.gg1$year <- gg1$year
 
-ggplot(data = melt.gg1, aes(x = value, group=year, colour=year)) +
-  stat_density(geom = "path", position = "identity") + 
+ggplot(data = melt.gg1, aes(x = value, group=as.factor(year), color=as.factor(year))) +
+  stat_density(geom = "path", position = "identity", size=1.5) + 
   theme_bw() +
-  scale_color_gradientn(colours = rainbow(5))+
-  facet_wrap(~variable, scales = "free") 
+  theme(axis.title.x=element_blank(), axis.title.y=element_blank(), text = element_text(size = 13))+
+  facet_wrap(~variable, scales = "free") + 
+  labs(color='Years') +
+  ggtitle("Vegetation Indices")
 
 #Create correlations of all of the numerical variables
 #First way
@@ -151,7 +155,7 @@ std.gg <-data.frame(gg1[,c(16:25)])
 gg.pca <- stats::princomp(~ . , data=std.gg, cor=TRUE, scores=TRUE) 
 summary(gg.pca)
 screeplot(gg.pca, type="lines")
-get_eigenvalue(gg.pca)
+#get_eigenvalue(gg.pca)
 
 #3D Visualization
 library(rgl)
