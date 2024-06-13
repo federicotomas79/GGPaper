@@ -51,7 +51,38 @@ gg1.2014v2 <- filter(gg1, year == 2014)
 table(gg1.2014v2$year)
 glimpse(gg1.2014v2)
 
+
+par(mfrow=c(1,2))
+acf(model$resid,main="")
+acf(model$resid,type="p",main="")
+
 acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Alto",]$reNDVI)
 acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Halo",]$reNDVI)
 acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Nui",]$reNDVI)
+
+#Measure of influence (https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html)
+library(olsrr)
+
+model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1.2014v2)
+summary(model.ts)
+
+#Check the R book 
+influence.measures(model.ts)
+influence.measures(model.ts)$is.inf
+lm.influence(model.ts)
+
+#Extract date values from the most influential variables
+gg1.2014v2[which(apply(gg1.2014v2,influence.measures(model.ts)$is.inf, any)),]
+
+ols_plot_cooksd_bar(model.ts)
+ols_plot_cooksd_chart(model.ts)
+ols_plot_dfbetas(model.ts)
+ols_plot_dffits(model.ts)
+ols_plot_resid_stud(model.ts)
+ols_plot_resid_stand(model.ts)
+ols_plot_resid_lev(model.ts)
+ols_plot_resid_stud_fit(model.ts)
+ols_plot_hadi(model.ts)
+#ols_plot_resid_pot(model.ts)
+
 
