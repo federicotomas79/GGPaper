@@ -14,7 +14,7 @@ glimpse(gg1)
 
 table(gg1$year)
 
-#Filter with Year > 2013
+#Filter with Year > 2014
 gg1.2014 <- filter(gg1, year >= 2014)
 table(gg1.2014$year)
 
@@ -46,33 +46,51 @@ ggplot(gg1.2014, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
 
 #How do I calculate the effect of each grey dot (satellite image) to the GG density (Mean.m.2)?
 
-#Explore ACF for each year = 2014
-gg1.2014v2 <- filter(gg1, year == 2014)
-table(gg1.2014v2$year)
-glimpse(gg1.2014v2)
+#Explore ACF for each year
+gg.dens.2014 <- filter(gg1, year == 2014)
+gg.dens.2015 <- filter(gg1, year == 2015)
+gg.dens.2016 <- filter(gg1, year == 2016)
+gg.dens.2017 <- filter(gg1, year == 2017)
+
+x11()
+par(mfrow=c(4,2))
+dev.off()
+
+acf(gg.dens.2014$Mean.m.2, main="")
+acf(gg.dens.2014$Mean.m.2,type="p",main="")
+mtext("Grass grub in 2014", side = 3, line = -2, outer = TRUE, font=2)
+
+acf(gg.dens.2015$Mean.m.2, main="")
+acf(gg.dens.2015$Mean.m.2,type="p",main="")
+mtext("Grass grub in 2015", side = 3, line = -22, outer = TRUE, font=2)
+
+acf(gg.dens.2016$Mean.m.2, main="")
+acf(gg.dens.2016$Mean.m.2,type="p",main="")
+mtext("Grass grub in 2016", side = 3, line = -42, outer = TRUE, font=2)
+
+acf(gg.dens.2017$Mean.m.2, main="")
+acf(gg.dens.2017$Mean.m.2,type="p",main="")
+mtext("Grass grub in 2017", side = 3, line = -62, outer = TRUE, font=2)
 
 
-par(mfrow=c(1,2))
-acf(model$resid,main="")
-acf(model$resid,type="p",main="")
-
-acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Alto",]$reNDVI)
-acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Halo",]$reNDVI)
-acf(gg1.2014v2[gg1.2014v2$Ryegrass.cultivar=="Nui",]$reNDVI)
 
 #Measure of influence (https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html)
 library(olsrr)
 
-model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1.2014v2)
+model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1.2014)
 summary(model.ts)
 
 #Check the R book 
 influence.measures(model.ts)
 influence.measures(model.ts)$is.inf
-lm.influence(model.ts)
+lm.influence(model.ts)$hat > 0.1
+
+sort(lm.influence(model.ts)$hat, decreasing = TRUE)
 
 #Extract date values from the most influential variables
-gg1.2014v2[which(apply(gg1.2014v2,influence.measures(model.ts)$is.inf, any)),]
+df2 <- gg1.2014 %>% dplyr::filter(lm.influence(model.ts)$hat > 0.1)
+unique(df2$rs_sample_Date)
+
 
 ols_plot_cooksd_bar(model.ts)
 ols_plot_cooksd_chart(model.ts)
