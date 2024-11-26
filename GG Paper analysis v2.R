@@ -93,7 +93,7 @@ unique(df2$rs_sample_Date)
 
 
 ols_plot_cooksd_bar(model.ts)
-ols_plot_cooksd_chart(model.ts)
+ols_plot_cooksd_chart  (model.ts)
 ols_plot_dfbetas(model.ts)
 ols_plot_dffits(model.ts)
 ols_plot_resid_stud(model.ts)

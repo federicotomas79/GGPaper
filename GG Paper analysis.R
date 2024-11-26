@@ -1,6 +1,6 @@
 ## GG Paper
 # Federico Tomasetto 
-# 2024/5/17
+# 2024/11/26
 
 rm(list = ls(all.names = TRUE)) # will clear all objects, including hidden objects
 gc()
@@ -12,7 +12,23 @@ setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper/rs_gg_mdl_data_2022_01_07_plus_2012_2013_FT.csv')      
 glimpse(gg1)
 
-table(gg1$year)
+#Calculate different gg risk levels
+hist(gg1$Mean.m.2)
+length(gg1$Mean.m.2) #1070
+
+length(which(gg1$Mean.m.2 <100)) #307
+length(which(gg1$Mean.m.2 <150)) #423
+length(which(gg1$Mean.m.2 <200)) #543
+
+# Mutate values and assign risk levels
+gg1 <- gg1 %>%
+   mutate(risk_level = case_when(
+        gg1$Mean.m.2 <= 100 ~ "Low Risk",
+       TRUE ~ "High Risk"
+     )
+   )
+ 
+glimpse(gg1)
 
 #MSAVI = modified soil-adjusted vegetation index (index less sensitive to chlorophyll effects, more responsive to green LAI variations and more resistant to soil and atmosphere effects)
 #NGRDI = Normalized Green–Red Difference Index indicates the colour of a pixel (i.e., greenish or reddish)
@@ -28,6 +44,11 @@ diff.days.sample <- difftime(rs.sample.days, gg.sample.days, units = "days")
 unique(diff.days.sample)
 gg1$diff.days.sample <- as.numeric(diff.days.sample)
 glimpse(gg1)
+
+# library(raster)
+# gg1br <- brick(gg1[,c()])
+
+plot(gg1$NDVI)
 
 #Graphs for difference days between rs and gg sample
 #x11()
@@ -68,15 +89,15 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
 
 #Visualize grass grub infestation levels
-gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
-gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
+#gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
+#gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
 
-table(gg1$gg_risk_label) #High #Low 
-                         #327  #543 
+table(gg1$risk_level) #High Risk  Low Risk 
+                      #763        307
 
-ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
+ggplot(gg1, aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) + 
   geom_violin(trim=FALSE) +
-  scale_x_discrete(limits = rev) +
+  scale_x_discrete(limits = rev, labels=c("Low", "High")) +
   scale_color_brewer(palette="Set1") +
   theme_bw() +
   #stat_summary(fun=mean, geom="point", size=2) +
