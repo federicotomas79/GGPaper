@@ -88,16 +88,6 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
   labs(title = "Grass grub by cultivar per year", x = "Year") +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
 
-#Visualize CRW & Porina 
-setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/ggj_paper/materials/GG data") 
-
-require(readxl)
-require(rstatix)
-
-path <- excel_sheets(readxl_example("Main - LURDF gg trial MRM.xlsx"))
-lapply(excel_sheets(path), read_excel, path = path)
-
-
 #Visualize grass grub infestation levels
 #gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
 #gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
