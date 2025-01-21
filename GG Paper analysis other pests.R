@@ -27,7 +27,7 @@ ggplot(porina.df, aes(x=`Sample Date`, y = `Mean m2`, fill = Cultivar)) +
   theme_bw() +
   labs(fill = "Ryegrass cultivar", y= bquote(italic(Wiseana) ~ "larvae per" ~ m^2)) +
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "Porina by cultivar per year", x = "Year") +
+  labs(x = "Year") +
   facet_wrap(~`Sowing rate (kg/ha)`, labeller = labeller(`Sowing rate (kg/ha)` = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
 
 #CRW
@@ -39,5 +39,5 @@ ggplot(crw.df, aes(x=`Sample Date`, y = `Mean m2`, fill = Cultivar)) +
   theme_bw() +
   labs(fill = "Ryegrass cultivar", y= bquote(italic(S.)~italic(obsoletus) ~ "larvae per" ~ m^2)) +
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "CRW by cultivar per year", x = "Year") +
+  labs(x = "Year") +
   facet_wrap(~`Sowing rate (kg/ha)`, labeller = labeller(`Sowing rate (kg/ha)` = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))

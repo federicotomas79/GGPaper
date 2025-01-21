@@ -23,7 +23,7 @@ length(which(gg1$Mean.m.2 <200)) #543
 # Mutate values and assign risk levels
 gg1 <- gg1 %>%
    mutate(risk_level = case_when(
-        gg1$Mean.m.2 <= 100 ~ "Low Risk",
+        gg1$Mean.m.2 <= 150 ~ "Low Risk",
        TRUE ~ "High Risk"
      )
    )
@@ -66,7 +66,7 @@ ggplot(gg1, aes(x = gg.sample.days, y = Mean.m.2)) +
   theme_bw() +
   scale_x_date(date_labels=("%d-%b-%Y"), 
                breaks = unique(gg.sample.days)) +
-  labs(title = "Grass grub per year", y = "Log (Value)", x = "Date") +
+  labs(title = "Grass grub per year", y = "Value", x = "Date") +
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="pointrange", color="red")
 
 #With log transformation 
@@ -80,12 +80,11 @@ ggplot(gg1, aes(x = gg.sample.days, y = log(Mean.m.2))) +
 
 #Visualize grass grub densities by cultivar per year
 #x11()
-ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
+ggplot(na.omit(gg1), aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) + 
   geom_boxplot() + 
   theme_bw() +
-  labs(fill = "Ryegrass cultivar", y= expression("Larvae per"~ m^2)) +
+  labs(fill = "Ryegrass cultivar", x = "Year", y = bquote(italic(C.)~italic(giveni) ~ "larvae per" ~ m^2)) +
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "Grass grub by cultivar per year", x = "Year") +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
 
 #Visualize grass grub infestation levels
@@ -93,9 +92,9 @@ ggplot(gg1, aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)) +
 #gg1$gg_risk_label[gg1$gg_risk_label=="1"] <- "High"
 
 table(gg1$risk_level) #High Risk  Low Risk 
-                      #763        307
+                      #647        427
 
-ggplot(gg1, aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) + 
+ggplot(na.omit(gg1), aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) + 
   geom_violin(trim=FALSE) +
   scale_x_discrete(limits = rev, labels=c("Low", "High")) +
   scale_color_brewer(palette="Set1") +
@@ -103,18 +102,18 @@ ggplot(gg1, aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) +
   #stat_summary(fun=mean, geom="point", size=2) +
   guides(colour = "none") +    
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "Grass grub by infestation levels", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+  labs(x = "Risk levels", y = bquote(italic(C.)~italic(giveni) ~ "larvae per" ~ m^2)) +
   geom_boxplot(width=0.1)
 
-ggplot(gg1, aes(x=factor(gg_risk_label), y=Mean.m.2, color=factor(gg_risk_label))) + 
+ggplot(na.omit(gg1), aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) + 
   geom_violin(trim=FALSE) +
-  scale_x_discrete(limits = rev) +
+  scale_x_discrete(limits = rev, labels=c("Low", "High")) +
   scale_color_brewer(palette="Set1") +
   theme_bw() +
   #stat_summary(fun=mean, geom="point", size=2) +
   guides(colour = "none") +    
   geom_jitter(width=0.1, alpha=0.1) +
-  labs(title = "Grass grub by infestation levels per sampling year", x = "Risk levels", y= expression("Larvae per"~ m^2)) +
+  labs(x = "Risk levels", y = bquote(italic(C.)~italic(giveni) ~ "larvae per" ~ m^2)) +
   geom_boxplot(width=0.1) +
   facet_wrap(~year)
 
@@ -137,7 +136,7 @@ melt.gg1 <- melt(gg1[, c(16:25)])
 melt.gg1$year <- gg1$year
 
 ggplot(data = melt.gg1, aes(x = value, group=as.factor(year), color=as.factor(year))) +
-  stat_density(geom = "path", position = "identity", size=1.5) + 
+  stat_density(geom = "path", position = "identity", linewidth=1.5) + 
   theme_bw() +
   theme(axis.title.x=element_blank(), axis.title.y=element_blank(), text = element_text(size = 13))+
   facet_wrap(~variable, scales = "free") + 
@@ -291,7 +290,35 @@ plot(gg.rp1)
 text(gg.rp1)
 summary(gg.rp1)
 
+#Measure of influence (https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html)
+library(olsrr)
 
+model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = na.omit(gg1))
+summary(model.ts)
+plot(model.ts)
+
+#To analyse autocorrelatin in R (https://rpubs.com/markpayne/164550)
+par(mfrow=c(1,1))
+plot(residuals(model.ts))
+
+plot(residuals(model.ts),type="b")
+abline(h=0,lty=3)
+acf(residuals(model.ts))
+
+#Spatial GLM (https://pages.cms.hu-berlin.de/EOL/gcg_quantitative-methods/Lab15_SpatialRegression.html)
+gg1$residuals <- residuals(model.ts)
+gg1$fitted <- fitted(model.ts)
+
+ggplot(na.omit(gg1), aes(col = residuals, size = residuals)) +
+  geom_sf() +
+  scale_color_gradient2()
+
+#Check the R book 
+influence.measures(model.ts)
+influence.measures(model.ts)$is.inf
+lm.influence(model.ts)$hat > 0.1
+
+sort(lm.influence(model.ts)$hat, decreasing = TRUE)
 
 #from here.....
 
