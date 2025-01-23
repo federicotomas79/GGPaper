@@ -9,7 +9,7 @@ library(tidyverse)
 
 setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 
-gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper/rs_gg_mdl_data_2022_01_07_plus_2012_2013_FT.csv')      
+gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper/gg.fulldata.csv')      
 glimpse(gg1)
 
 #Calculate different gg risk levels
@@ -290,10 +290,8 @@ plot(gg.rp1)
 text(gg.rp1)
 summary(gg.rp1)
 
-#Measure of influence (https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html)
-library(olsrr)
-
-model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = na.omit(gg1))
+#Temporal and Spatial Regression analysis
+model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = gg1, na.action = na.exclude)
 summary(model.ts)
 plot(model.ts)
 
@@ -303,15 +301,44 @@ plot(residuals(model.ts))
 
 plot(residuals(model.ts),type="b")
 abline(h=0,lty=3)
-acf(residuals(model.ts))
+acf(residuals(model.ts), na.action = na.pass)
 
 #Spatial GLM (https://pages.cms.hu-berlin.de/EOL/gcg_quantitative-methods/Lab15_SpatialRegression.html)
-gg1$residuals <- residuals(model.ts)
-gg1$fitted <- fitted(model.ts)
+#gg1$residuals <- residuals(model.ts)
+#gg1$fitted <- fitted(model.ts)
 
-ggplot(na.omit(gg1), aes(col = residuals, size = residuals)) +
-  geom_sf() +
-  scale_color_gradient2()
+#Map plots sampled 
+library(sf)
+
+ggplot(gg1, aes(Lat, Long)) + 
+  geom_point(size = .25, show.legend = FALSE) +
+  coord_quickmap()
+
+#Create a spatial dataframe
+library(spdep)
+
+gg1.sliced <- slice(gg1, 1:(n()-200))
+
+gg1.xy <- cbind(gg1.sliced[,c(30:31)])
+str(gg1.xy)
+
+gg1.nb <- dnearneigh(gg1.xy, d1 = 0, d2 = 50)
+str(gg1.nb, list.len=5, give.attr = F)
+
+gg1.lw <- nb2listw(gg1.nb, style = "W")
+str(gg1.lw$weights, list.len=5, give.attr = F) 
+
+moran.test(gg1.sliced$Mean.m.2, listw = gg1.lw, randomisation = FALSE)
+
+#Moran with permutation (using a Monte Carlo test)
+gg.bperm <- moran.mc(gg1.sliced$Mean.m.2, listw = gg1.lw, nsim = 999)
+gg.bperm
+
+gg.cor3 <- sp.correlogram(neighbours = gg1.nb, var = gg1.sliced$Mean.m.2, order = 3)
+print(gg.cor3)
+
+#Measure of influence (https://cran.r-project.org/web/packages/olsrr/vignettes/influence_measures.html)
+library(olsrr)
 
 #Check the R book 
 influence.measures(model.ts)
