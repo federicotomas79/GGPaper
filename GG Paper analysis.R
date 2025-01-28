@@ -52,12 +52,16 @@ plot(gg1$NDVI)
 
 #Graphs for difference days between rs and gg sample
 #x11()
-ggplot(gg1, aes(x = year, y = diff.days.sample, fill=diff.days.sample)) +
+# Getting rid of the gap in 2013
+
+gg1 %>% filter(year != 2013) %>%
+ggplot(aes(x = factor(year), y = diff.days.sample, fill=diff.days.sample)) +
   geom_point(stat = 'identity', color="grey", show.legend = FALSE) +
   theme_bw() +
-  labs(title = "Difference in days between gg sampling and rs data", y = "Difference in days (RS images)", x = "Sampling year")+
+  labs(y = "Difference in days (RS images)", x = "Sampling year")+
   stat_summary(fun.data=mean_sdl, fun.args = list(mult=1), geom="point", color="red", show.legend = FALSE) +
-  scale_y_continuous(breaks = (c(0, -50, -100, -150, -200)), labels = c("Day GG sampled", -50, -100, -150, -200))
+  scale_y_continuous(breaks = (c(0, -50, -100, -150, -200)), labels = c("Day GG sampled", -50, -100, -150, -200)) 
+  
 
 #Visualize grass grub densities by months
 #range(gg1$Mean.m.2) #0-688 
@@ -86,6 +90,19 @@ ggplot(na.omit(gg1), aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)
   labs(fill = "Ryegrass cultivar", x = "Year", y = bquote(italic(C.)~italic(giveni) ~ "larvae per" ~ m^2)) +
   geom_jitter(width=0.1, alpha=0.1) +
   facet_wrap(~Sowing.rate..kg.ha., labeller = labeller(Sowing.rate..kg.ha. = c("6" = "Sowing rate = 6 kg/ha", "30" = "Sowing rate = 30 kg/ha")))
+
+#A two-way ANOVA to assess the main effects of each factor and their interaction (https://www.scribbr.com/statistics/two-way-anova/#:~:text=The%20two%2Dway%20ANOVA%20will,the%20dependent%20variable%20(average%20crop)
+model1 <- aov(Mean.m.2 ~ Ryegrass.cultivar + Sowing.rate..kg.ha., data = gg1)
+model2 <- aov(Mean.m.2 ~ Ryegrass.cultivar * Sowing.rate..kg.ha., data = gg1)
+model3 <- aov(Mean.m.2 ~ Ryegrass.cultivar * year + Sowing.rate..kg.ha., data = gg1)
+
+library(AICcmodavg)
+model.set <- list(model1, model2, model3)
+model.names <- c("two.way", "interaction", "blocking")
+aictab(model.set, modnames = model.names)
+
+summary(model3)
+TukeyHSD(model)
 
 #Visualize grass grub infestation levels
 #gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
@@ -227,14 +244,14 @@ legend(x = "top", legend = sort(unique(gg1$year)),
        fill = 1:sort(unique(gg1$year)), horiz=TRUE, bty = "n", cex = 0.9)
 
 #PLS with low levels of infestation
-gg1low <- gg1 %>% filter(gg_risk_label=="Low")
+gg1low <- gg1 %>% filter(risk_level=="Low")
 plsda_out2 <- PLSSVD(X=as.matrix(gg1low[,c(16:25)]), Y=as.matrix(gg1low$year), deflation = TRUE)
 plot(plsda_out2$scoreX, col=sort(factor(gg1low$year)), main="PLSDA VIs - low level", pch=16)
 legend(x = "top", legend = sort(unique(gg1low$year)), 
        fill = 1:sort(unique(gg1low$year)), horiz=TRUE, bty = "n", cex = 0.9)
 
 #PLS with high levels of infestation
-gg1high <- gg1 %>% filter(gg_risk_label=="High")
+gg1high <- gg1 %>% filter(risk_level=="High")
 plsda_out3 <- PLSSVD(X=as.matrix(gg1high[,c(16:25)]), Y=as.matrix(gg1high$year), deflation = TRUE)
 plot(plsda_out3$scoreX, col=sort(factor(gg1high$year)), main="PLSDA VIs - high level", pch=16)
 legend(x = "top", legend = sort(unique(gg1high$year)), 
@@ -283,8 +300,7 @@ plotIndiv(plsda_out4, ind.names = TRUE, ellipse = TRUE, legend = TRUE, title="PL
 
 #CART approach analysis
 library(rpart)
-
-gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI, data = gg1)
+gg.rp1 <- rpart(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = gg1)
 x11()
 plot(gg.rp1)
 text(gg.rp1)
