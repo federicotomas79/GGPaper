@@ -30,6 +30,9 @@ gg1 <- gg1 %>%
  
 glimpse(gg1)
 
+#Convert into risk levels into factors
+gg1 <- mutate_at(gg1, vars(risk_level), as.factor)
+
 #MSAVI = modified soil-adjusted vegetation index (index less sensitive to chlorophyll effects, more responsive to green LAI variations and more resistant to soil and atmosphere effects)
 #NGRDI = Normalized Green–Red Difference Index indicates the colour of a pixel (i.e., greenish or reddish)
 #ReNDVI = Red-edge Normalized Vegetation Index approaches 1 when the crops are dense and the RENDVI approaches 0 when the crops are thin
@@ -311,7 +314,7 @@ model.ts <- lm(Mean.m.2 ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red +
 summary(model.ts)
 plot(model.ts)
 
-#To analyse autocorrelatin in R (https://rpubs.com/markpayne/164550)
+#To analyse autocorrelation in R (https://rpubs.com/markpayne/164550)
 par(mfrow=c(1,1))
 plot(residuals(model.ts))
 
@@ -395,3 +398,29 @@ sort(lm.influence(model.ts)$hat, decreasing = TRUE)
 #      geom_smooth(data = gg1, aes(x = Blue, y = Mean.m.2), method = 'lm') +
 #      labs(title = p_title)+
 #      facet_wrap(~year, ncol = 2)
+
+
+#Using Random Forest
+glimpse(gg2)
+gg2<-gg1[complete.cases(gg1),]
+table(gg2$risk_level)
+
+library(caret) # For easy train/test split
+
+set.seed(123) # For reproducibility
+index.rl <- createDataPartition(gg2$risk_level, p = 0.7, list = FALSE) # 70% train
+train_data <- gg2[index.rl, ]
+test_data <- gg2[-index.rl, ]
+
+library(randomForest)
+model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data)
+print(model_rf)
+
+predicted_classes_rf <- predict(model_rf, newdata = test_data)
+confusionMatrix(predicted_classes_rf, test_data$risk_level)   
+
+importance(model_rf) # For Random Forest
+varImpPlot(model_rf)
+
+
+
