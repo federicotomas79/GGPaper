@@ -401,8 +401,8 @@ sort(lm.influence(model.ts)$hat, decreasing = TRUE)
 
 
 #Using Random Forest
-glimpse(gg2)
 gg2<-gg1[complete.cases(gg1),]
+glimpse(gg2)
 table(gg2$risk_level)
 
 library(caret) # For easy train/test split
@@ -413,13 +413,14 @@ train_data <- gg2[index.rl, ]
 test_data <- gg2[-index.rl, ]
 
 library(randomForest)
-model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data)
+model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data, 
+                         ntree=1000, proximity = TRUE)
 print(model_rf)
 
 predicted_classes_rf <- predict(model_rf, newdata = test_data)
 confusionMatrix(predicted_classes_rf, test_data$risk_level)   
 
-importance(model_rf) # For Random Forest
+round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
 
 
