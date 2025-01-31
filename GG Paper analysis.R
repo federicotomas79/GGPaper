@@ -400,7 +400,7 @@ sort(lm.influence(model.ts)$hat, decreasing = TRUE)
 #      facet_wrap(~year, ncol = 2)
 
 
-#Using Random Forest
+#Using Random Forest (https://uc-r.github.io/random_forests)
 gg2<-gg1[complete.cases(gg1),]
 glimpse(gg2)
 table(gg2$risk_level)
@@ -413,15 +413,40 @@ train_data <- gg2[index.rl, ]
 test_data <- gg2[-index.rl, ]
 
 library(randomForest)
+
+#Tuning Random Forest
+set.seed(123)
+train_data_rf <- train_data[,c(16:25, 30:31, 34)]
+features <- setdiff(names(train_data_rf), "risk_level")
+
+m2 <- tuneRF(
+  x          = train_data_rf[features],
+  y          = train_data_rf$risk_level,
+  ntreeTry   = 1000,
+  mtryStart  = 5,
+  stepFactor = 1.5,
+  improve    = 0.01,
+  trace      = FALSE      # to not show real-time progress 
+)
+
+#Run Random Forest 
 model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data, 
-                         ntree=1000, proximity = TRUE)
+                         ntree=1000, proximity = TRUE, mtry=10)
 print(model_rf)
+
+plot(model_rf)
 
 predicted_classes_rf <- predict(model_rf, newdata = test_data)
 confusionMatrix(predicted_classes_rf, test_data$risk_level)   
 
 round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
+
+
+
+
+
+
 
 
 
