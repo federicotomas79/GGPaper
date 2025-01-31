@@ -105,7 +105,7 @@ model.names <- c("two.way", "interaction", "blocking")
 aictab(model.set, modnames = model.names)
 
 summary(model3)
-TukeyHSD(model)
+TukeyHSD(model3)
 
 #Visualize grass grub infestation levels
 #gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
@@ -439,9 +439,11 @@ plot(model_rf)
 predicted_classes_rf <- predict(model_rf, newdata = test_data)
 confusionMatrix(predicted_classes_rf, test_data$risk_level)   
 
+# To present confusion matrix
+# ConfusionTableR (https://cran.r-project.org/web/packages/ConfusionTableR/vignettes/ConfusionTableR.html)
+
 round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
-
 
 
 
