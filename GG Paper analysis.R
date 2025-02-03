@@ -97,7 +97,7 @@ ggplot(na.omit(gg1), aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)
 #A two-way ANOVA to assess the main effects of each factor and their interaction (https://www.scribbr.com/statistics/two-way-anova/#:~:text=The%20two%2Dway%20ANOVA%20will,the%20dependent%20variable%20(average%20crop)
 model1 <- aov(Mean.m.2 ~ Ryegrass.cultivar + Sowing.rate..kg.ha., data = gg1)
 model2 <- aov(Mean.m.2 ~ Ryegrass.cultivar * Sowing.rate..kg.ha., data = gg1)
-model3 <- aov(Mean.m.2 ~ Ryegrass.cultivar * year + Sowing.rate..kg.ha., data = gg1)
+model3 <- aov(Mean.m.2 ~ Ryegrass.cultivar * year + Sowing.rate..kg.ha. * year, data = gg1)
 
 library(AICcmodavg)
 model.set <- list(model1, model2, model3)
@@ -431,7 +431,7 @@ m2 <- tuneRF(
 
 #Run Random Forest 
 model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data, 
-                         ntree=1000, proximity = TRUE, mtry=10)
+                         ntree=1000, proximity = TRUE, mtry=7)
 print(model_rf)
 
 plot(model_rf)
@@ -445,10 +445,30 @@ confusionMatrix(predicted_classes_rf, test_data$risk_level)
 round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
 
+#Using the caret Random Forest method
+rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long,
+                         data = train_data,
+                         method = "rf",
+                         metric = "Accuracy")
 
+rf_model
 
+rf_class <- predict(rf_model, newdata = test_data, type = "raw") 
+predictions <- cbind(data.frame(train_preds=rf_class, 
+                                test_data$risk_level))
 
+#To print out a confusion matrix
+library(ConfusionTableR)
 
+cm <- caret::confusionMatrix(predictions$train_preds, predictions$test_data.risk_level)
+print(cm)
 
-
-
+x11()
+ConfusionTableR::binary_visualiseR(train_labels = predictions$train_preds,
+                                   truth_labels= predictions$test_data.risk_level,
+                                   class_label1 = "High Levels", 
+                                   class_label2 = "Low Levels",
+                                   quadrant_col1 = "#28ACB4", 
+                                   quadrant_col2 = "#4397D2", 
+                                   custom_title = "Risk Levels Confusion Matrix", 
+                                   text_col= "black")
