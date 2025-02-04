@@ -32,6 +32,8 @@ glimpse(gg1)
 
 #Convert into risk levels into factors
 gg1 <- mutate_at(gg1, vars(risk_level), as.factor)
+gg1 <- mutate_at(gg1, vars(year), as.factor)
+gg1 <- mutate_at(gg1, vars(Ryegrass.cultivar), as.factor)
 
 #MSAVI = modified soil-adjusted vegetation index (index less sensitive to chlorophyll effects, more responsive to green LAI variations and more resistant to soil and atmosphere effects)
 #NGRDI = Normalized Green–Red Difference Index indicates the colour of a pixel (i.e., greenish or reddish)
@@ -416,7 +418,7 @@ library(randomForest)
 
 #Tuning Random Forest
 set.seed(123)
-train_data_rf <- train_data[,c(16:25, 30:31, 34)]
+train_data_rf <- train_data[,c(5, 12, 16:25, 30:31, 34)]
 features <- setdiff(names(train_data_rf), "risk_level")
 
 m2 <- tuneRF(
@@ -429,9 +431,9 @@ m2 <- tuneRF(
   trace      = FALSE      # to not show real-time progress 
 )
 
-#Run Random Forest 
-model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long, data = train_data, 
-                         ntree=1000, proximity = TRUE, mtry=7)
+#Run Random Forest (if excluding Lat and Long the classification precision is lower)
+model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Ryegrass.cultivar:year, data = train_data, 
+                         ntree=1000, proximity = TRUE, mtry=10)
 print(model_rf)
 
 plot(model_rf)
@@ -446,7 +448,7 @@ round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
 
 #Using the caret Random Forest method
-rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long,
+rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Ryegrass.cultivar:year,
                          data = train_data,
                          method = "rf",
                          metric = "Accuracy")
