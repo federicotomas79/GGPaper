@@ -7,6 +7,8 @@ gc()
 
 library(tidyverse)
 
+#check the command here()
+
 setwd("C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper")
 
 gg1 <- read.csv('C:/Users/TOMASETTOF/OneDrive - AgResearch/Documents/GitHub/GGPaper/gg.fulldata.csv')      
@@ -407,12 +409,29 @@ gg2<-gg1[complete.cases(gg1),]
 glimpse(gg2)
 table(gg2$risk_level)
 
+#To graph risk levels over the years to consider it as a categorical variable
+ggplot(gg2, aes(x=factor(risk_level), y=Mean.m.2, color=factor(risk_level))) + 
+#  geom_violin(trim=FALSE) +
+  scale_x_discrete(limits = rev, labels=c("Low", "High")) +
+  scale_color_brewer(palette="Set1") +
+  theme_bw() +
+  #stat_summary(fun=mean, geom="point", size=2) +
+  guides(colour = "none") +    
+  geom_jitter(width=0.1, alpha=0.1) +
+  labs(x = "Risk levels", y = bquote(italic(C.)~italic(giveni) ~ "larvae per" ~ m^2)) +
+  geom_boxplot(width=0.1) +
+  facet_wrap(~year)
+
 library(caret) # For easy train/test split
 
 set.seed(123) # For reproducibility
 index.rl <- createDataPartition(gg2$risk_level, p = 0.7, list = FALSE) # 70% train
+
 train_data <- gg2[index.rl, ]
+table(train_data$risk_level) #to check that there even values for the response variables
+
 test_data <- gg2[-index.rl, ]
+table(test_data$risk_level)
 
 library(randomForest)
 
@@ -431,8 +450,8 @@ m2 <- tuneRF(
   trace      = FALSE      # to not show real-time progress 
 )
 
-#Run Random Forest (if excluding Lat and Long the classification precision is lower)
-model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Ryegrass.cultivar:year, data = train_data, 
+#Run Random Forest (Excluding Ryegrass cultivars and years)
+model_rf <- randomForest(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long + Ryegrass.cultivar, data = train_data, 
                          ntree=1000, proximity = TRUE, mtry=10)
 print(model_rf)
 
@@ -448,12 +467,16 @@ round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
 
 #Using the caret Random Forest method
-rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Ryegrass.cultivar:year,
+rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long + Ryegrass.cultivar,
                          data = train_data,
                          method = "rf",
-                         metric = "Accuracy")
+                         metric = "Accuracy",
+                         preProcess = c("center", "scale"),
+                         trControl = trainControl(method = "cv"))
 
 rf_model
+
+ggplot2::ggplot(varImp(rf_model, scale = FALSE))
 
 rf_class <- predict(rf_model, newdata = test_data, type = "raw") 
 predictions <- cbind(data.frame(train_preds=rf_class, 
