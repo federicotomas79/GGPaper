@@ -466,8 +466,8 @@ confusionMatrix(predicted_classes_rf, test_data$risk_level)
 round(importance(model_rf), 1) # For Random Forest
 varImpPlot(model_rf)
 
-#Using the caret Random Forest method
-rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long + Ryegrass.cultivar,
+#Using the caret Random Forest method (without ryegrass cultivar)
+rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + NGRDI + Red + RedEdge + reNDVI + Lat + Long,
                          data = train_data,
                          method = "rf",
                          metric = "Accuracy",
@@ -476,7 +476,10 @@ rf_model <- caret::train(risk_level ~ Blue + GLI + Green + IR + MSAVI + NDVI + N
 
 rf_model
 
-ggplot2::ggplot(varImp(rf_model, scale = FALSE))
+ggplot <- ggplot2::ggplot(varImp(rf_model, scale = FALSE))
+
+ggplot + theme_bw()
+
 
 rf_class <- predict(rf_model, newdata = test_data, type = "raw") 
 predictions <- cbind(data.frame(train_preds=rf_class, 
