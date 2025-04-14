@@ -460,6 +460,8 @@ plot(model_rf)
 predicted_classes_rf <- predict(model_rf, newdata = test_data)
 confusionMatrix(predicted_classes_rf, test_data$risk_level)   
 
+confusionMatrix(predicted_classes_rf, test_data$risk_level, positive="Low Risk")
+
 # To present confusion matrix
 # ConfusionTableR (https://cran.r-project.org/web/packages/ConfusionTableR/vignettes/ConfusionTableR.html)
 
@@ -488,7 +490,7 @@ predictions <- cbind(data.frame(train_preds=rf_class,
 #To print out a confusion matrix
 library(ConfusionTableR)
 
-cm <- caret::confusionMatrix(predictions$train_preds, predictions$test_data.risk_level)
+cm <- caret::confusionMatrix(predictions$train_preds, predictions$test_data.risk_level, positive="Low Risk")
 print(cm)
 
 x11()
