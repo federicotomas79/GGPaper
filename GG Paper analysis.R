@@ -102,14 +102,15 @@ ggplot(na.omit(gg1), aes(x=factor(year), y = Mean.m.2, fill = Ryegrass.cultivar)
 model1 <- aov(Mean.m.2 ~ Ryegrass.cultivar + Sowing.rate..kg.ha., data = gg1)
 model2 <- aov(Mean.m.2 ~ Ryegrass.cultivar * Sowing.rate..kg.ha., data = gg1)
 model3 <- aov(Mean.m.2 ~ Ryegrass.cultivar * year + Sowing.rate..kg.ha. * year, data = gg1)
+model4 <- aov(Mean.m.2 ~ Ryegrass.cultivar * year * Sowing.rate..kg.ha., data = gg1) #three-way anova
+summary(model4)
 
 library(AICcmodavg)
-model.set <- list(model1, model2, model3)
-model.names <- c("two.way", "interaction", "blocking")
+model.set <- list(model1, model2, model3, model4)
+model.names <- c("two.way", "interaction", "blocking", "three-way")
 aictab(model.set, modnames = model.names)
 
-summary(model3)
-TukeyHSD(model3)
+summary(model4)
 
 #Visualize grass grub infestation levels
 #gg1$gg_risk_label[gg1$gg_risk_label=="0"] <- "Low"
